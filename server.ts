@@ -48,6 +48,7 @@ const featurePolicy = require('feature-policy')
 const errorhandler = require('errorhandler')
 const cookieParser = require('cookie-parser')
 const serveIndex = require('serve-index')
+const csurf = require('csurf')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const securityTxt = require('express-security.txt')
@@ -173,6 +174,9 @@ restoreOverwrittenFilesWithOriginals().then(() => {
   /* Bludgeon solution for possible CORS problems: Allow everything! */
   app.options('*', cors())
   app.use(cors())
+
+  /* CSRF protection middleware */
+  app.use(csurf({ cookie: true }))
 
   /* Security middleware */
   app.use(helmet.noSniff())
