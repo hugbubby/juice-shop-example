@@ -27,9 +27,15 @@ module.exports = function profileImageUrlUpload () {
           })
           .on('response', function (res: Response) {
             if (res.statusCode === 200) {
-              const ext = ['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg'
-              imageRequest.pipe(fs.createWriteStream(`frontend/dist/frontend/assets/public/images/uploads/${loggedInUser.data.id}.${ext}`))
-              UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: `/assets/public/images/uploads/${loggedInUser.data.id}.${ext}` }) }).catch((error: Error) => { next(error) })
+              const allowedExtensions = ['jpg', 'jpeg', 'png', 'svg', 'gif'];
+              const ext = allowedExtensions.includes(url.split('.').slice(-1)[0].toLowerCase()) ? url.split('.').slice(-1)[0].toLowerCase() : 'jpg';
+              const sanitizedFileName = `${loggedInUser.data.id}.${ext}`.replace(/[^a-zA-Z0-9._-]/g, '');
+              const uploadPath = 'frontend/dist/frontend/assets/public/images/uploads/';
+              const filePath = `${uploadPath}${sanitizedFileName}`;
+              imageRequest.pipe(fs.createWriteStream(filePath));
+              UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { 
+                return await user?.update({ profileImage: `/assets/public/images/uploads/${sanitizedFileName}` });
+              }).catch((error: Error) => { next(error) });
             } else UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
           })
       } else {
