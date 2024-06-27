@@ -4,7 +4,7 @@
  */
 import { type Request, type Response, type NextFunction } from 'express'
 import { UserModel } from '../models/user'
-import { decode } from 'jsonwebtoken'
+import { verify } from 'jsonwebtoken'
 import * as security from '../lib/insecurity'
 
 async function retrieveUserList (req: Request, res: Response, next: NextFunction) {
@@ -17,8 +17,12 @@ async function retrieveUserList (req: Request, res: Response, next: NextFunction
         const userToken = security.authenticatedUsers.tokenOf(user)
         let lastLoginTime: number | null = null
         if (userToken) {
-          const parsedToken = decode(userToken, { json: true })
-          lastLoginTime = parsedToken ? Math.floor(new Date(parsedToken?.iat ?? 0 * 1000).getTime()) : null
+          try {
+            const parsedToken = verify(userToken, security.jwtSecret) as { iat: number }
+            lastLoginTime = Math.floor(new Date(parsedToken.iat * 1000).getTime())
+          } catch (error) {
+            console.error('Invalid token:', error)
+          }
         }
 
         return {
