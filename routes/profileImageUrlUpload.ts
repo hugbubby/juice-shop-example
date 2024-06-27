@@ -12,7 +12,7 @@ import * as utils from '../lib/utils'
 const security = require('../lib/insecurity')
 const request = require('request')
 
-function isValidUrl(url: string): boolean {
+function isValidUrl (url: string): boolean {
   try {
     const parsedUrl = new URL(url)
     return ['http:', 'https:'].includes(parsedUrl.protocol)
@@ -29,7 +29,7 @@ module.exports = function profileImageUrlUpload () {
       const loggedInUser = security.authenticatedUsers.get(req.cookies.token)
       if (loggedInUser) {
         if (!isValidUrl(url)) {
-          return next(new Error('Invalid image URL'))
+          next(new Error('Invalid image URL')); return
         }
         const imageRequest = request
           .get(url)
