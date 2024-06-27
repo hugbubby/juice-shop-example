@@ -15,12 +15,26 @@ const request = require('request')
 module.exports = function profileImageUrlUpload () {
   return (req: Request, res: Response, next: NextFunction) => {
     if (req.body.imageUrl !== undefined) {
-      const url = req.body.imageUrl
-      if (url.match(/(.)*solve\/challenges\/server-side(.)*/) !== null) req.app.locals.abused_ssrf_bug = true
+      let url: URL
+      try {
+        url = new URL(req.body.imageUrl)
+      } catch (error) {
+        return next(new Error('Invalid image URL'))
+      }
+      
+      // Whitelist allowed protocols and domains
+      const allowedProtocols = ['http:', 'https:']
+      const allowedDomains = ['example.com', 'trusted-domain.com'] // Add your allowed domains here
+      
+      if (!allowedProtocols.includes(url.protocol) || !allowedDomains.includes(url.hostname)) {
+        return next(new Error('Invalid or disallowed image URL'))
+      }
+
+      if (url.toString().match(/(.)*solve\/challenges\/server-side(.)*/) !== null) req.app.locals.abused_ssrf_bug = true
       const loggedInUser = security.authenticatedUsers.get(req.cookies.token)
       if (loggedInUser) {
         const imageRequest = request
-          .get(url)
+          .get(url.toString())
           .on('error', function (err: unknown) {
             UserModel.findByPk(loggedInUser.data.id).then(async (user: UserModel | null) => { return await user?.update({ profileImage: url }) }).catch((error: Error) => { next(error) })
             logger.warn(`Error retrieving user profile image: ${utils.getErrorMessage(err)}; using image link directly`)
