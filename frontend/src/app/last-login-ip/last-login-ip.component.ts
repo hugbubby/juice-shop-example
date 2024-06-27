@@ -26,19 +26,19 @@ export class LastLoginIpComponent {
   parseAuthToken () {
     const token = localStorage.getItem('token')
     if (token) {
-      const payload = jwtDecode(token) as any
+      const payload = jwtDecode(token)
       if (payload.data.lastLoginIp) {
         this.lastLoginIp = this.escapeHtml(payload.data.lastLoginIp)
       }
     }
   }
 
-  private escapeHtml(unsafe: string): string {
+  private escapeHtml (unsafe: string): string {
     return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
   }
 }
