@@ -84,7 +84,7 @@ export class AboutComponent implements OnInit {
         feedbacks[i].comment = this.sanitizer.bypassSecurityTrustHtml(feedbacks[i].comment)
         this.slideshowDataSource.push({ url: this.images[i % this.images.length], caption: feedbacks[i].comment })
       }
-    }, (err) => {
+    },(err) => {
       console.log(err)
     })
   }
