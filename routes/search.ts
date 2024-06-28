@@ -46,7 +46,7 @@ module.exports = function searchProducts () {
           }).catch((error: Error) => {
             next(error)
           })
-        }
+        } 
         if (challengeUtils.notSolved(challenges.dbSchemaChallenge)) {
           let solved = true
           void models.sequelize.query('SELECT sql FROM sqlite_master').then(([data]: any) => {
