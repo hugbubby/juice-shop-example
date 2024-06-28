@@ -15,7 +15,7 @@ class ErrorWithParent extends Error {
   parent: Error | undefined
 }
 
-// vuln-code-snippet start unionSqlInjectionChallenge dbSchemaChallenge
+// vuln-code-snippet start unionSqlInjectionasdChallenge dbSchemaChallenge 
 module.exports = function searchProducts () {
   return (req: Request, res: Response, next: NextFunction) => {
     let criteria: any = req.query.q === 'undefined' ? '' : req.query.q ?? ''
