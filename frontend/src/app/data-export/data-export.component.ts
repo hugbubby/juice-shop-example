@@ -7,7 +7,7 @@ import { Component, type OnInit } from '@angular/core'
 import { UntypedFormControl, Validators } from '@angular/forms'
 import { ImageCaptchaService } from '../Services/image-captcha.service'
 import { DataSubjectService } from '../Services/data-subject.service'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 
 @Component({
   selector: 'app-data-export',
@@ -17,7 +17,7 @@ import { DomSanitizer } from '@angular/platform-browser'
 export class DataExportComponent implements OnInit {
   public captchaControl: UntypedFormControl = new UntypedFormControl('', [Validators.required, Validators.minLength(5)])
   public formatControl: UntypedFormControl = new UntypedFormControl('', [Validators.required])
-  public captcha: any
+  public captcha: SafeHtml
   private dataRequest: any = undefined
   public confirmation: any
   public error: any
@@ -42,7 +42,7 @@ export class DataExportComponent implements OnInit {
 
   getNewCaptcha () {
     this.imageCaptchaService.getCaptcha().subscribe((data: any) => {
-      this.captcha = this.sanitizer.bypassSecurityTrustHtml(data.image)
+      this.captcha = this.sanitizer.sanitize(1, data.image) || ''
     })
   }
 
