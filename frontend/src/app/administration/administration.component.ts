@@ -10,7 +10,7 @@ import { FeedbackService } from '../Services/feedback.service'
 import { MatTableDataSource } from '@angular/material/table'
 import { UserService } from '../Services/user.service'
 import { Component, type OnInit, ViewChild } from '@angular/core'
-import { DomSanitizer } from '@angular/platform-browser'
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faArchive, faEye, faHome, faTrashAlt, faUser } from '@fortawesome/free-solid-svg-icons'
 import { MatPaginator } from '@angular/material/paginator'
@@ -46,7 +46,7 @@ export class AdministrationComponent implements OnInit {
       this.userDataSource = users
       this.userDataSourceHidden = users
       for (const user of this.userDataSource) {
-        user.email = this.sanitizer.bypassSecurityTrustHtml(`<span class="${this.doesUserHaveAnActiveSession(user) ? 'confirmation' : 'error'}">${user.email}</span>`)
+        user.email = this.safelyDisplayEmail(user)
       }
       this.userDataSource = new MatTableDataSource(this.userDataSource)
       this.userDataSource.paginator = this.paginatorUsers
@@ -55,6 +55,12 @@ export class AdministrationComponent implements OnInit {
       this.error = err
       console.log(this.error)
     })
+  }
+
+  safelyDisplayEmail(user: any): SafeHtml {
+    const cssClass = this.doesUserHaveAnActiveSession(user) ? 'confirmation' : 'error'
+    const sanitizedEmail = this.sanitizer.sanitize(1, user.email) || ''
+    return this.sanitizer.bypassSecurityTrustHtml(`<span class="${cssClass}">${sanitizedEmail}</span>`)
   }
 
   findAllFeedbacks () {
