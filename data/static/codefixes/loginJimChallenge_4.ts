@@ -1,4 +1,8 @@
-import {BasketModel} from "../../../models/basket";
+import { BasketModel } from "../models/basket";
+import { Request, Response, NextFunction } from "express";
+import { User } from "../models/user";
+import * as security from "../lib/insecurity";
+import * as models from "../models/index";
 
 module.exports = function login () {
   function afterLogin (user: { data: User, bid: number }, res: Response, next: NextFunction) {
@@ -17,25 +21,45 @@ module.exports = function login () {
     if (req.body.email.match(/.*['-;].*/) || req.body.password.match(/.*['-;].*/)) {
       res.status(451).send(res.__('SQL Injection detected.'))
     }
-    models.sequelize.query(`SELECT * FROM Users WHERE email = '${req.body.email || ''}' AND password = '${security.hash(req.body.password || '')}' AND deletedAt IS NULL`, { model: models.User, plain: true })
-      .then((authenticatedUser) => {
-        const user = utils.queryResultToJson(authenticatedUser)
-        if (user.data?.id && user.data.totpSecret !== '') {
-          res.status(401).json({
-            status: 'totp_token_required',
-            data: {
-              tmpToken: security.authorize({
-                userId: user.data.id,
-                type: 'password_valid_needs_second_factor_token'
-              })
-            }
-          })
-        } else if (user.data?.id) {
-          afterLogin(user, res, next)
-        } else {
+    models.User.findOne({
+      where: {
+        email: req.body.email || '',
+        deletedAt: null
+      },
+      raw: true
+    })
+      .then((user) => {
+        if (!user) {
+          // Use a constant-time comparison to prevent timing attacks
+          security.comparePasswordWithConstantTime('', security.hash(req.body.password || ''))
           res.status(401).send(res.__('Invalid email or password.'))
+        } else {
+          security.comparePasswordWithConstantTime(user.password, security.hash(req.body.password || ''))
+            .then((passwordValid) => {
+              if (passwordValid) {
+                if (user.totpSecret !== '') {
+                  res.status(401).json({
+                    status: 'totp_token_required',
+                    data: {
+                      tmpToken: security.authorize({
+                        userId: user.id,
+                        type: 'password_valid_needs_second_factor_token'
+                      })
+                    }
+                  })
+                } else {
+                  afterLogin({ data: user, bid: 0 }, res, next)
+                }
+              } else {
+                res.status(401).send(res.__('Invalid email or password.'))
+              }
+            })
+            .catch((error: Error) => {
+              next(error)
+            })
         }
-      }).catch((error: Error) => {
+      })
+      .catch((error: Error) => {
         next(error)
       })
   }
