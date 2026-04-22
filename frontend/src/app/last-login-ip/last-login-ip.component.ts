@@ -4,19 +4,16 @@
  */
 
 import { Component } from '@angular/core'
-import { DomSanitizer } from '@angular/platform-browser'
 import * as jwtDecode from 'jwt-decode'
 
 @Component({
   selector: 'app-last-login-ip',
   templateUrl: './last-login-ip.component.html',
   styleUrls: ['./last-login-ip.component.scss']
-
 })
 
 export class LastLoginIpComponent {
-  lastLoginIp: any = '?'
-  constructor (private readonly sanitizer: DomSanitizer) {}
+  lastLoginIp: string = '?'
 
   ngOnInit () {
     try {
@@ -27,14 +24,21 @@ export class LastLoginIpComponent {
   }
 
   parseAuthToken () {
-    let payload = {} as any
     const token = localStorage.getItem('token')
     if (token) {
-      payload = jwtDecode(token)
+      const payload = jwtDecode(token) as any
       if (payload.data.lastLoginIp) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        this.lastLoginIp = this.sanitizer.bypassSecurityTrustHtml(`<small>${payload.data.lastLoginIp}</small>`)
+        this.lastLoginIp = this.escapeHtml(payload.data.lastLoginIp)
       }
     }
+  }
+
+  private escapeHtml(unsafe: string): string {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 }
